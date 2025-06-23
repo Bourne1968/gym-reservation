@@ -42,19 +42,6 @@
             <el-option label="女" value="女" />
           </el-select>
         </el-form-item>
-        <el-form-item label="照片">
-          <el-upload
-            class="avatar-uploader"
-            action="http://localhost:8081/api/instructors/upload-photo"
-            :show-file-list="false"
-            :on-success="handlePhotoSuccess"
-            :headers="uploadHeaders"
-            :before-upload="beforePhotoUpload"
-          >
-            <img v-if="form.photoUrl" :src="form.photoUrl" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><i class="el-icon-plus"></i></el-icon>
-          </el-upload>
-        </el-form-item>
         <el-form-item label="专业资质"><el-input v-model="form.qualification" /></el-form-item>
         <el-form-item label="简介"><el-input v-model="form.bio" type="textarea" /></el-form-item>
         <el-form-item label="擅长课程">
@@ -87,8 +74,6 @@ const dialogMode = ref('add')
 const dialogLoading = ref(false)
 const form = ref({ id: null, name: '', gender: '', photoUrl: '', qualification: '', bio: '', specialties: [] })
 const courses = ref([])
-
-const uploadHeaders = { Authorization: `Bearer ${localStorage.getItem('token')}` }
 
 const fetchInstructors = async () => {
   loading.value = true
@@ -174,25 +159,6 @@ const deleteInstructor = async (id) => {
   } finally {
     deleteLoading.value[id] = false
   }
-}
-
-const handlePhotoSuccess = (res) => {
-  if (res && res.url) {
-    form.value.photoUrl = res.url
-    ElMessage.success('上传成功')
-  }
-}
-
-const beforePhotoUpload = (file) => {
-  const isJPG = file.type === 'image/jpeg' || file.type === 'image/png'
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isJPG) {
-    ElMessage.error('只能上传 JPG/PNG 格式图片!')
-  }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB!')
-  }
-  return isJPG && isLt2M
 }
 
 onMounted(() => {

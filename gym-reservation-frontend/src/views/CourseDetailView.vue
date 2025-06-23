@@ -2,35 +2,41 @@
   <NavBar />
   <div class="main-content">
     <el-card class="detail-card">
-      <div style="display: flex;">
-        <img v-if="course.imageUrl" :src="course.imageUrl" style="width: 260px; height: 180px; object-fit: cover; border-radius: 10px; margin-right: 32px;" />
-        <div>
-          <h2>{{ course.name }}</h2>
-          <div style="color: #888; margin-bottom: 8px;">{{ course.category }} | {{ course.level }}</div>
-          <div style="margin-bottom: 8px;">{{ course.description }}</div>
-          <div style="margin-bottom: 8px;">时长：{{ course.duration }} 分钟</div>
-          <div style="margin-bottom: 8px;">状态：{{ course.status }}</div>
+      <div class="detail-header">
+        <img v-if="course.imageUrl" :src="course.imageUrl" class="detail-img" />
+        <div class="detail-info">
+          <h2 class="detail-title">{{ course.name }}</h2>
+          <el-tag size="small" type="success" style="margin-right: 8px;">{{ course.category }}</el-tag>
+          <el-tag size="small" type="info">{{ course.level }}</el-tag>
+          <div class="detail-desc">{{ course.description }}</div>
+          <div class="detail-meta">时长：{{ course.duration }} 分钟 | 状态：{{ course.status }}</div>
         </div>
       </div>
       <el-divider />
       <h3>教练介绍</h3>
-      <div v-if="instructor">
-        <img v-if="instructor.photoUrl" :src="instructor.photoUrl" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; margin-right: 16px;" />
-        <span style="font-weight: bold;">{{ instructor.name }}</span>
-        <span style="margin-left: 12px; color: #888;">{{ instructor.qualification }}</span>
-        <div style="margin-top: 6px;">{{ instructor.bio }}</div>
+      <div v-if="instructor" class="instructor-info">
+        <img v-if="instructor.photoUrl" :src="instructor.photoUrl" class="instructor-avatar" />
+        <div>
+          <div class="instructor-name">{{ instructor.name }}</div>
+          <el-tag size="small" type="warning" style="margin-bottom: 4px;">{{ instructor.qualification }}</el-tag>
+          <div class="instructor-bio">{{ instructor.bio }}</div>
+        </div>
       </div>
       <el-divider />
       <h3>可预约安排</h3>
-      <el-table :data="schedules" style="width: 100%">
+      <el-table :data="schedules" stripe style="width: 100%">
         <el-table-column prop="startTime" label="开始时间">
           <template #default="scope">{{ formatTime(scope.row.startTime) }}</template>
         </el-table-column>
         <el-table-column prop="endTime" label="结束时间">
           <template #default="scope">{{ formatTime(scope.row.endTime) }}</template>
         </el-table-column>
-        <el-table-column label="剩余名额" width="100">
-          <template #default="scope">{{ scope.row.maxParticipants - scope.row.currentParticipants }}</template>
+        <el-table-column label="剩余名额" width="120">
+          <template #default="scope">
+            <el-progress :percentage="Math.round(100 * (scope.row.maxParticipants - scope.row.currentParticipants) / scope.row.maxParticipants)" :text-inside="true" :stroke-width="18" status="success" :show-text="true">
+              <span>{{ scope.row.maxParticipants - scope.row.currentParticipants }} / {{ scope.row.maxParticipants }}</span>
+            </el-progress>
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="120">
           <template #default="scope">
@@ -151,8 +157,61 @@ onMounted(async () => {
   width: 100%;
   max-width: 900px;
   padding: 32px 24px 18px 24px;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(66,185,131,0.10);
   background: #fff;
+}
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.detail-img {
+  width: 260px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-right: 32px;
+  box-shadow: 0 2px 12px rgba(66,185,131,0.10);
+}
+.detail-info {
+  flex: 1;
+}
+.detail-title {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.detail-desc {
+  color: #888;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.detail-meta {
+  color: #42b983;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.instructor-info {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.instructor-avatar {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-right: 16px;
+  box-shadow: 0 2px 8px rgba(66,185,131,0.10);
+}
+.instructor-name {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+.instructor-bio {
+  color: #888;
+  font-size: 13px;
 }
 </style> 

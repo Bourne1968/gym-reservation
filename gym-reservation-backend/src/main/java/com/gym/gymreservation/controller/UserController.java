@@ -16,7 +16,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -116,5 +118,21 @@ public class UserController {
         target.setEnabled(enabled);
         userRepository.save(target);
         return ResponseEntity.ok("操作成功");
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateMyInfo(@RequestBody User updateUser, Principal principal) {
+        String username = principal.getName();
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (!userOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        User user = userOpt.get();
+        // 只允许更新部分字段
+        user.setPhone(updateUser.getPhone());
+        user.setEmail(updateUser.getEmail());
+        user.setGender(updateUser.getGender());
+        userRepository.save(user);
+        return ResponseEntity.ok(user);
     }
 } 

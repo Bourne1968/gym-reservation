@@ -30,7 +30,19 @@ public class ReservationService {
         Gym gym = gymRepository.findById(gymId)
                 .orElseThrow(() -> new RuntimeException("Gym not found with id: " + gymId));
 
-        // 冲突校验：同一场地同一时间已被预约
+        // 1. 时间限制：只能预约未来时间
+        if (reserveTime.isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("只能预约未来的时间！");
+        }
+
+        // 2. 用户冲突检测：该用户该时间段是否已有预约
+        for (Reservation r : reservationRepository.findByUser(user)) {
+            if (r.getReserveTime().equals(reserveTime) && "RESERVED".equals(r.getStatus())) {
+                throw new RuntimeException("你该时间段已有预约，不能重复预约！");
+            }
+        }
+
+        // 3. 场地冲突校验
         reservationRepository.findByGymAndReserveTimeAndStatus(gym, reserveTime, "RESERVED")
                 .ifPresent(r -> { throw new RuntimeException("该场地该时间已被预约，请选择其他时间"); });
 

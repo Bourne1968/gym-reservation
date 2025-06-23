@@ -21,6 +21,18 @@ public class User {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Column(nullable = false)
+    private String phone;
+
+    @Column(nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private String gender;
+
+    @Column(nullable = false)
+    private Boolean isInstructor = false; // 是否为教练
+
     // getter 和 setter
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -32,4 +44,12 @@ public class User {
     public void setRole(String role) { this.role = role; }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
+    public Boolean getIsInstructor() { return isInstructor; }
+    public void setIsInstructor(Boolean isInstructor) { this.isInstructor = isInstructor; }
 } 
