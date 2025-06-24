@@ -28,9 +28,14 @@ public class ReservationController {
 
     @PostMapping
     public ResponseEntity<?> createReservation(@RequestBody ReservationRequestDTO request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        com.gym.gymreservation.model.User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
+        }
         try {
             Reservation newReservation = reservationService.createReservation(
-                    request.getUserId(),
+                    user.getId(),
                     request.getGymId(),
                     request.getReserveTime()
             );
@@ -61,5 +66,16 @@ public class ReservationController {
         }
         reservationService.deleteReservation(id);
         return ResponseEntity.ok("删除成功");
+    }
+
+    // 获取当前用户的场地预约
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyReservations() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        com.gym.gymreservation.model.User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
+        }
+        return ResponseEntity.ok(reservationService.getReservationsByUser(user));
     }
 } 

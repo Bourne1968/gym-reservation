@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-container main-content">
     <el-card class="login-card">
       <h2 style="margin-bottom: 24px;">健身房预约系统登录</h2>
       <el-form @submit.prevent="handleLogin" :model="form" status-icon label-width="0">

@@ -1,5 +1,5 @@
 <template>
-  <div class="register-container">
+  <div class="register-container main-content">
     <el-card class="register-card">
       <h2 style="margin-bottom: 24px;">用户注册</h2>
       <el-form @submit.prevent="handleRegister" :model="form" status-icon label-width="0">
@@ -11,6 +11,19 @@
         </el-form-item>
         <el-form-item>
           <el-input v-model="form.adminCode" placeholder="管理员邀请码（选填）" clearable prefix-icon="Key" />
+        </el-form-item>
+        <el-form-item>
+          <el-input v-model="form.email" placeholder="邮箱" clearable prefix-icon="Message" />
+        </el-form-item>
+        <el-form-item>
+          <el-input v-model="form.phone" placeholder="手机号" clearable prefix-icon="Phone" />
+        </el-form-item>
+        <el-form-item>
+          <el-select v-model="form.gender" placeholder="性别" style="width: 100%;">
+            <el-option label="男" value="男" />
+            <el-option label="女" value="女" />
+            <el-option label="其他" value="其他" />
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" style="width:100%;" :loading="loading" @click="handleRegister">注册</el-button>
@@ -29,7 +42,7 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
-const form = ref({ username: '', password: '', adminCode: '' })
+const form = ref({ username: '', password: '', adminCode: '', email: '', phone: '', gender: '' })
 const error = ref('')
 const router = useRouter()
 const loading = ref(false)
@@ -49,7 +62,10 @@ const handleRegister = async () => {
     const res = await axios.post('http://localhost:8081/api/users/register', {
       username: form.value.username,
       password: form.value.password,
-      adminCode: form.value.adminCode
+      adminCode: form.value.adminCode,
+      email: form.value.email,
+      phone: form.value.phone,
+      gender: form.value.gender
     })
     if (res.data && res.data.id) {
       error.value = ''

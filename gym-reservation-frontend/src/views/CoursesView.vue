@@ -63,9 +63,7 @@ const currentPage = ref(1)
 
 const fetchCourses = async () => {
   try {
-    const res = await axios.get('http://localhost:8081/api/courses', {
-      params: { search: search.value, category: category.value, level: level.value }
-    })
+    const res = await axios.get('http://localhost:8081/api/courses')
     courses.value = res.data
   } catch (e) {
     error.value = e.response?.data || '获取课程失败'

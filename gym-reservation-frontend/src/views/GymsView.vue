@@ -2,7 +2,10 @@
   <NavBar />
   <div class="main-content">
     <el-card class="gyms-card">
-      <h2 style="margin-bottom: 24px;">健身房场地列表</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2>健身房场地列表</h2>
+        <el-button type="primary" @click="goToMyGymReservations" size="small">我的场地预约</el-button>
+      </div>
       <el-table :data="gyms" v-loading="loading" style="width: 100%">
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="name" label="场地名称" />
@@ -32,7 +35,7 @@
       </el-form>
       <template #footer>
         <el-button @click="reserveDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="reserveLoading" @click="submitReservation">确认预约</el-button>
+        <el-button type="primary" :loading="reserveLoading[selectedGym?.id]" @click="submitReservation">确认预约</el-button>
       </template>
     </el-dialog>
   </div>
@@ -43,7 +46,9 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import NavBar from '../components/NavBar.vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const gyms = ref([])
 const loading = ref(false)
 const error = ref('')
@@ -52,6 +57,10 @@ const reserveDialogVisible = ref(false)
 const reserveTime = ref('')
 const selectedGym = ref(null)
 const reserveLoading = ref({})
+
+const goToMyGymReservations = () => {
+  router.push({ name: 'MyGymReservations' })
+}
 
 const fetchGyms = async () => {
   loading.value = true
@@ -76,9 +85,13 @@ const openReserveDialog = (gym) => {
 }
 
 const submitReservation = async () => {
+  if (!selectedGym.value || !selectedGym.value.id) {
+    ElMessage.error('未选择有效的场地，请重试');
+    return;
+  }
   if (!reserveTime.value) {
-    ElMessage.error('请选择预约时间')
-    return
+    ElMessage.error('请选择预约时间');
+    return;
   }
   reserveLoading.value[selectedGym.value.id] = true
   error.value = ''

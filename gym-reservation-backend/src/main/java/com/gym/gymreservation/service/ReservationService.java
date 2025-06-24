@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class ReservationService {
@@ -46,15 +47,26 @@ public class ReservationService {
         reservationRepository.findByGymAndReserveTimeAndStatus(gym, reserveTime, "RESERVED")
                 .ifPresent(r -> { throw new RuntimeException("该场地该时间已被预约，请选择其他时间"); });
 
-        // 2. 创建新的预约对象
+        // 4. 检查场地余量
+        if (gym.getCapacity() <= 0) {
+            throw new RuntimeException("该场地已无可用余量！");
+        }
+
+        // 5. 创建新的预约对象
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setGym(gym);
         reservation.setReserveTime(reserveTime);
         reservation.setStatus("RESERVED");
 
-        // 3. 保存预约
-        return reservationRepository.save(reservation);
+        // 6. 保存预约
+        Reservation saved = reservationRepository.save(reservation);
+
+        // 7. 更新场地余量
+        gym.setCapacity(gym.getCapacity() - 1);
+        gymRepository.save(gym);
+
+        return saved;
     }
 
     public Iterable<Reservation> getAllReservations() {
@@ -63,5 +75,9 @@ public class ReservationService {
 
     public void deleteReservation(Long id) {
         reservationRepository.deleteById(id);
+    }
+
+    public List<Reservation> getReservationsByUser(User user) {
+        return reservationRepository.findByUser(user);
     }
 } 

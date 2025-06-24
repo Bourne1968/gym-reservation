@@ -65,9 +65,15 @@ public class UserController {
             String username = (String) payload.get("username");
             String password = (String) payload.get("password");
             String adminCode = (String) payload.getOrDefault("adminCode", "");
+            String email = (String) payload.get("email");
+            String phone = (String) payload.get("phone");
+            String gender = (String) payload.get("gender");
             User user = new User();
             user.setUsername(username);
             user.setPassword(password);
+            user.setEmail(email);
+            user.setPhone(phone);
+            user.setGender(gender);
             if ("ADMIN2024".equals(adminCode)) {
                 user.setRole("ADMIN");
             } else {
@@ -134,5 +140,16 @@ public class UserController {
         user.setGender(updateUser.getGender());
         userRepository.save(user);
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyInfo(java.security.Principal principal) {
+        String username = principal.getName();
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isPresent()) {
+            return ResponseEntity.ok(userOpt.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("用户不存在");
+        }
     }
 } 

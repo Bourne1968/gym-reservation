@@ -1,23 +1,43 @@
 <template>
   <NavBar />
-  <div class="main-content">
+  <div class="home-main main-content">
     <el-card class="home-card">
+      <!-- 1. 轮播图 -->
       <el-carousel height="320px" class="banner-carousel" indicator-position="outside">
         <el-carousel-item v-for="(img, idx) in banners" :key="idx">
           <img :src="img" class="banner-img" />
         </el-carousel-item>
       </el-carousel>
+
+      <!-- 2. 快捷入口卡片 -->
+      <div class="quick-entry">
+        <el-card class="entry-card" shadow="hover" @click="goCourses">
+          <i class="el-icon-notebook-2 entry-icon"></i>
+          <div>课程预约</div>
+        </el-card>
+        <el-card class="entry-card" shadow="hover" @click="goGyms">
+          <i class="el-icon-office-building entry-icon"></i>
+          <div>场地预约</div>
+        </el-card>
+        <el-card class="entry-card" shadow="hover" @click="goMyReservations">
+          <i class="el-icon-date entry-icon"></i>
+          <div>我的预约</div>
+        </el-card>
+      </div>
+
+      <!-- 3. 公告栏 -->
       <el-card class="announcement-card" shadow="hover">
         <template #header>
           <el-icon style="color:#42b983;"><i class="el-icon-bell"></i></el-icon>
           <span style="font-weight:bold;margin-left:8px;">公告</span>
         </template>
-        <ul v-if="announcements.length">
-          <li v-for="a in announcements" :key="a.id">{{ a.content }}</li>
+        <ul>
+          <li v-for="(item, idx) in announcements.length ? announcements : defaultAnnouncements" :key="idx">{{ item }}</li>
         </ul>
-        <div v-else style="color:#888;">暂无公告</div>
       </el-card>
-      <h3 style="margin:32px 0 16px 0;">推荐课程</h3>
+
+      <!-- 4. 热门课程推荐 -->
+      <h3 style="margin:32px 0 16px 0;">热门课程推荐</h3>
       <el-row :gutter="24">
         <el-col v-for="course in recommendedCourses" :key="course.id" :span="6">
           <el-card class="course-card" :body-style="{ padding: '16px' }" @click="goCourseDetail(course.id)">
@@ -30,6 +50,11 @@
           </el-card>
         </el-col>
       </el-row>
+
+      <!-- 5. 健身小贴士 -->
+      <el-card class="tips-card" shadow="never">
+        <span>💡 今日小贴士：{{ todayTip }}</span>
+      </el-card>
     </el-card>
   </div>
 </template>
@@ -47,6 +72,21 @@ const banners = ref([
   '/banner2.jpg',
   '/banner3.jpg'
 ])
+const defaultAnnouncements = [
+  '欢迎使用健身房预约系统！',
+  '请合理安排锻炼时间，遵守场馆规定。',
+  '如有疑问请联系管理员。',
+  '预约冲突、名额已满等会有友好提示。'
+]
+const tips = [
+  '运动前记得热身，预防拉伤！',
+  '锻炼后适当拉伸，缓解肌肉酸痛。',
+  '保持充足睡眠有助于恢复体力。',
+  '合理饮食，均衡营养，助力健身。',
+  '多喝水，及时补充水分。',
+  '坚持锻炼，循序渐进，避免过度。'
+]
+const todayTip = tips[new Date().getDay() % tips.length]
 const router = useRouter()
 
 const fetchAnnouncements = async () => {
@@ -64,6 +104,10 @@ const fetchRecommendedCourses = async () => {
 const goCourseDetail = (id) => {
   router.push(`/courses/${id}`)
 }
+const goCourses = () => router.push('/courses')
+const goGyms = () => router.push('/gyms')
+const goMyReservations = () => router.push('/my-reservations')
+
 onMounted(() => {
   fetchAnnouncements()
   fetchRecommendedCourses()
@@ -71,7 +115,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.main-content {
+.home-main {
   margin-top: 80px;
   display: flex;
   align-items: flex-start;
@@ -94,6 +138,37 @@ onMounted(() => {
   width: 100%;
   height: 320px;
   object-fit: cover;
+}
+.quick-entry {
+  display: flex;
+  justify-content: space-between;
+  margin: 32px 0 24px 0;
+}
+.entry-card {
+  flex: 1;
+  margin: 0 12px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  min-width: 160px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 500;
+}
+.entry-card:hover {
+  box-shadow: 0 6px 24px rgba(66,185,131,0.18);
+  transform: translateY(-2px) scale(1.04);
+  color: #42b983;
+}
+.entry-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  color: #42b983;
 }
 .announcement-card {
   margin-bottom: 24px;
@@ -143,5 +218,15 @@ onMounted(() => {
 .reserve-btn {
   float: right;
   margin-top: 6px;
+}
+.tips-card {
+  margin-top: 32px;
+  background: #f8f8ff;
+  border: 1px solid #e1eaff;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 16px;
+  color: #3a3a3a;
+  box-shadow: none;
 }
 </style> 

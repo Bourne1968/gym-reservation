@@ -2,17 +2,22 @@
   <el-header class="navbar">
     <div class="navbar-left">
       <span class="navbar-title">🏋️ 健身房预约系统</span>
-      <el-button type="text" @click="goHome" :class="{active: isActive('/')}">首页</el-button>
-      <el-button type="text" @click="goCourses" :class="{active: isActive('/courses')}">课程列表</el-button>
-      <el-button type="text" @click="goCourseBooking" :class="{active: isActive('/course-booking')}">课程预约</el-button>
-      <el-button type="text" @click="goProfile" :class="{active: isActive('/profile')}">个人中心</el-button>
-      <el-button v-if="role === 'ADMIN'" type="text" @click="goAdminInstructors" :class="{active: isActive('/admin/instructors')}">教练管理</el-button>
-      <el-button v-if="role === 'ADMIN'" type="text" @click="goAdminGyms" :class="{active: isActive('/admin/gyms')}">场地管理</el-button>
-      <el-button v-if="role === 'ADMIN'" type="text" @click="goAdminUsers" :class="{active: isActive('/admin/users')}">用户管理</el-button>
-      <el-button v-if="role === 'ADMIN'" type="text" @click="goAdminReservations" :class="{active: isActive('/admin/reservations')}">预约管理</el-button>
-      <el-button v-if="role === 'ADMIN'" type="text" @click="goAdminMembers" :class="{active: isActive('/admin/members')}">会员管理</el-button>
-      <el-button v-if="role === 'ADMIN'" type="text" @click="goAdminCourses" :class="{active: isActive('/admin/courses')}">课程管理</el-button>
-      <el-button v-if="role === 'ADMIN'" type="text" @click="goAdminCourseSchedules" :class="{active: isActive('/admin/course-schedules')}">课程安排</el-button>
+      <template v-if="role !== 'ADMIN'">
+        <el-button type="text" @click="goHome" :class="{active: isActive('/')}" >首页</el-button>
+        <el-button type="text" @click="goCourses" :class="{active: isActive('/courses')}">课程列表</el-button>
+        <el-button type="text" @click="goGyms" :class="{active: isActive('/gyms')}">场地列表</el-button>
+        <el-button type="text" @click="goCourseBooking" :class="{active: isActive('/course-booking')}">课程预约</el-button>
+        <el-button type="text" @click="goProfile" :class="{active: isActive('/profile')}">个人中心</el-button>
+      </template>
+      <template v-else>
+        <el-button type="text" @click="goAdminInstructors" :class="{active: isActive('/admin/instructors')}">教练管理</el-button>
+        <el-button type="text" @click="goAdminGyms" :class="{active: isActive('/admin/gyms')}">场地管理</el-button>
+        <el-button type="text" @click="goAdminUsers" :class="{active: isActive('/admin/users')}">用户管理</el-button>
+        <el-button type="text" @click="goAdminReservations" :class="{active: isActive('/admin/reservations')}">预约管理</el-button>
+        <el-button type="text" @click="goAdminMembers" :class="{active: isActive('/admin/members')}">会员管理</el-button>
+        <el-button type="text" @click="goAdminCourses" :class="{active: isActive('/admin/courses')}">课程管理</el-button>
+        <el-button type="text" @click="goAdminCourseSchedules" :class="{active: isActive('/admin/course-schedules')}">课程安排</el-button>
+      </template>
     </div>
     <div class="navbar-right">
       <span v-if="username" class="username">{{ username }}</span>
