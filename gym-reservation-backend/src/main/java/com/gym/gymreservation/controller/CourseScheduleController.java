@@ -20,6 +20,11 @@ public class CourseScheduleController {
         return ResponseEntity.ok(courseScheduleService.getAllSchedules());
     }
 
+    @GetMapping(params = "courseId")
+    public ResponseEntity<List<CourseSchedule>> getSchedulesByCourseId(@RequestParam Long courseId) {
+        return ResponseEntity.ok(courseScheduleService.getSchedulesByCourseId(courseId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<CourseSchedule> getScheduleById(@PathVariable Long id) {
         Optional<CourseSchedule> schedule = courseScheduleService.getScheduleById(id);

@@ -2,31 +2,34 @@
   <NavBar />
   <div class="main-content">
     <el-card class="booking-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div class="booking-header">
         <h2>课程预约</h2>
-        <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" @change="fetchSchedules" style="width: 200px;" />
+        <el-date-picker v-model="selectedDate" type="date" placeholder="选择日期" @change="fetchSchedules" style="width: 200px; margin-left: 16px;" />
       </div>
-      <el-table :data="schedules" v-loading="loading" style="width: 100%">
-        <el-table-column prop="course.name" label="课程名称" />
-        <el-table-column prop="instructor" label="教练" />
-        <el-table-column label="时间">
-          <template #default="scope">
-            {{ formatTime(scope.row.startTime) }} - {{ formatTime(scope.row.endTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="剩余名额" width="100">
-          <template #default="scope">
-            {{ scope.row.maxParticipants - scope.row.currentParticipants }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="180">
-          <template #default="scope">
-            <el-button v-if="scope.row.maxParticipants > scope.row.currentParticipants && canReserve(scope.row)" type="primary" size="small" @click="openReserveDialog(scope.row)">预约</el-button>
-            <el-button v-else-if="scope.row.maxParticipants <= scope.row.currentParticipants && canReserve(scope.row)" type="warning" size="small" @click="openWaitlistDialog(scope.row)">候补</el-button>
-            <el-tag v-else type="info">不可预约</el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="booking-filter-bar">
+        <el-input v-model="search" placeholder="搜索课程/教练" prefix-icon="el-icon-search" style="width: 240px; margin-right: 16px;" clearable />
+      </div>
+      <el-row :gutter="24" class="schedules-row">
+        <el-col v-for="item in filteredSchedules" :key="item.id" :xs="24" :sm="24" :md="8" :lg="8">
+          <el-card class="schedule-card" shadow="hover">
+            <div class="schedule-title">{{ item.course?.name }}</div>
+            <div class="schedule-meta">
+              <span class="meta-label">教练：</span>{{ item.instructor || '待定' }}
+            </div>
+            <div class="schedule-meta">
+              <span class="meta-label">时间：</span>{{ formatTime(item.startTime) }} - {{ formatTime(item.endTime) }}
+            </div>
+            <div class="schedule-meta">
+              <span class="meta-label">剩余名额：</span>{{ item.maxParticipants - item.currentParticipants }} / {{ item.maxParticipants }}
+            </div>
+            <div class="schedule-actions">
+              <el-button v-if="item.maxParticipants > item.currentParticipants && canReserve(item)" type="primary" size="small" @click="openReserveDialog(item)">预约</el-button>
+              <el-button v-else-if="item.maxParticipants <= item.currentParticipants && canReserve(item)" type="warning" size="small" @click="openWaitlistDialog(item)">候补</el-button>
+              <el-tag v-else type="info">不可预约</el-tag>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
       <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" style="margin-top: 10px;" />
     </el-card>
 
@@ -48,46 +51,11 @@
         <el-button type="primary" :loading="dialogLoading" @click="submitWaitlist">确定</el-button>
       </template>
     </el-dialog>
-
-    <!-- 我的预约 -->
-    <el-card class="my-reservations-card" style="margin-top: 32px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3>我的预约</h3>
-      </div>
-      <el-table :data="myReservations" v-loading="myLoading" style="width: 100%">
-        <el-table-column prop="courseSchedule.course.name" label="课程名称" />
-        <el-table-column label="时间">
-          <template #default="scope">
-            {{ formatTime(scope.row.courseSchedule.startTime) }} - {{ formatTime(scope.row.courseSchedule.endTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100" />
-        <el-table-column label="操作" width="120">
-          <template #default="scope">
-            <el-button v-if="canCancel(scope.row)" type="danger" size="small" @click="openCancelDialog(scope.row)">取消</el-button>
-            <el-tag v-else type="info">不可取消</el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <!-- 取消预约弹窗 -->
-    <el-dialog v-model="cancelDialogVisible" title="取消预约" width="350px">
-      <el-form>
-        <el-form-item label="取消原因">
-          <el-input v-model="cancelReason" type="textarea" placeholder="请输入取消原因" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="cancelDialogVisible = false">关闭</el-button>
-        <el-button type="primary" :loading="dialogLoading" @click="submitCancel">确定取消</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import NavBar from '../components/NavBar.vue'
@@ -98,16 +66,23 @@ const schedules = ref([])
 const loading = ref(false)
 const error = ref('')
 
+const search = ref('')
+const filteredSchedules = computed(() => {
+  let arr = schedules.value
+  if (search.value) {
+    arr = arr.filter(item => {
+      const courseName = item.course?.name || ''
+      const instructor = item.instructor || ''
+      return courseName.includes(search.value) || instructor.includes(search.value)
+    })
+  }
+  return arr
+})
+
 const reserveDialogVisible = ref(false)
 const waitlistDialogVisible = ref(false)
 const dialogLoading = ref(false)
 const selectedSchedule = ref(null)
-
-const myReservations = ref([])
-const myLoading = ref(false)
-const cancelDialogVisible = ref(false)
-const cancelReason = ref('')
-const cancelingReservation = ref(null)
 
 const fetchSchedules = async () => {
   loading.value = true
@@ -122,19 +97,6 @@ const fetchSchedules = async () => {
     error.value = e.response?.data || '获取课程安排失败'
   } finally {
     loading.value = false
-  }
-}
-
-const fetchMyReservations = async () => {
-  myLoading.value = true
-  try {
-    const token = localStorage.getItem('token')
-    const res = await axios.get('http://localhost:8081/api/course-reservations/my', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    myReservations.value = res.data
-  } finally {
-    myLoading.value = false
   }
 }
 
@@ -160,7 +122,6 @@ const submitReservation = async () => {
     ElMessage.success('预约成功！')
     reserveDialogVisible.value = false
     fetchSchedules()
-    fetchMyReservations()
   } catch (e) {
     ElMessage.error(e.response?.data || '预约失败')
   } finally {
@@ -179,34 +140,9 @@ const submitWaitlist = async () => {
     })
     ElMessage.success('已加入候补！')
     waitlistDialogVisible.value = false
-    fetchMyReservations()
+    fetchSchedules()
   } catch (e) {
     ElMessage.error(e.response?.data || '加入候补失败')
-  } finally {
-    dialogLoading.value = false
-  }
-}
-
-const openCancelDialog = (reservation) => {
-  cancelingReservation.value = reservation
-  cancelReason.value = ''
-  cancelDialogVisible.value = true
-}
-
-const submitCancel = async () => {
-  dialogLoading.value = true
-  try {
-    const token = localStorage.getItem('token')
-    await axios.delete(`http://localhost:8081/api/course-reservations/${cancelingReservation.value.id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      data: { reason: cancelReason.value }
-    })
-    ElMessage.success('取消成功！')
-    cancelDialogVisible.value = false
-    fetchSchedules()
-    fetchMyReservations()
-  } catch (e) {
-    ElMessage.error(e.response?.data || '取消失败')
   } finally {
     dialogLoading.value = false
   }
@@ -217,16 +153,10 @@ const canReserve = (schedule) => {
   return true
 }
 
-const canCancel = (reservation) => {
-  // 可根据后端返回的可取消时间段等逻辑扩展
-  return reservation.status === 'RESERVED'
-}
-
 const formatTime = (t) => t ? dayjs(t).format('YYYY-MM-DD HH:mm') : ''
 
 onMounted(() => {
   fetchSchedules()
-  fetchMyReservations()
 })
 </script>
 
@@ -246,12 +176,51 @@ onMounted(() => {
   box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   background: #fff;
 }
-.my-reservations-card {
+.booking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.booking-filter-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.schedules-row {
   width: 100%;
   max-width: 1100px;
-  padding: 24px 18px 12px 18px;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.schedule-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(66,185,131,0.08);
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  margin-bottom: 18px;
   background: #fff;
+  padding: 18px 16px 12px 16px;
+}
+.schedule-card:hover {
+  box-shadow: 0 6px 24px rgba(66,185,131,0.18);
+  transform: translateY(-2px) scale(1.03);
+}
+.schedule-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.schedule-meta {
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.meta-label {
+  color: #42b983;
+  font-weight: bold;
+}
+.schedule-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
 }
 </style> 

@@ -47,11 +47,37 @@
       </el-table>
     </el-card>
     <!-- 预约弹窗 -->
-    <el-dialog v-model="reserveDialogVisible" title="确认预约" width="350px">
-      <div>确定预约该课程安排？</div>
+    <el-dialog v-model="reserveDialogVisible" title="课程预约" width="450px">
+      <div v-if="selectedSchedule" class="reservation-details">
+        <div class="reservation-item">
+          <span class="label">课程名称：</span>
+          <span class="value">{{ course.name }}</span>
+        </div>
+        <div class="reservation-item">
+          <span class="label">预约时间：</span>
+          <span class="value">{{ formatTime(selectedSchedule.startTime) }} - {{ formatTime(selectedSchedule.endTime) }}</span>
+        </div>
+        <div class="reservation-item">
+          <span class="label">课程时长：</span>
+          <span class="value">{{ course.duration }} 分钟</span>
+        </div>
+        <div class="reservation-item">
+          <span class="label">剩余名额：</span>
+          <span class="value">{{ selectedSchedule.maxParticipants - selectedSchedule.currentParticipants }} / {{ selectedSchedule.maxParticipants }}</span>
+        </div>
+        <div class="reservation-item">
+          <span class="label">教练：</span>
+          <span class="value">{{ instructor?.name || '待定' }}</span>
+        </div>
+        <el-divider />
+        <div class="reservation-notice">
+          <el-icon><InfoFilled /></el-icon>
+          <span>预约成功后，请按时参加课程。如需取消，请提前24小时操作。</span>
+        </div>
+      </div>
       <template #footer>
         <el-button @click="reserveDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="dialogLoading" @click="submitReservation">确定</el-button>
+        <el-button type="primary" :loading="dialogLoading" @click="submitReservation">确认预约</el-button>
       </template>
     </el-dialog>
     <!-- 候补弹窗 -->
@@ -71,6 +97,8 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import NavBar from '../components/NavBar.vue'
 import dayjs from 'dayjs'
+import { InfoFilled } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const course = ref({})
@@ -119,7 +147,42 @@ const submitReservation = async () => {
     }, {
       headers: { Authorization: `Bearer ${token}` }
     })
+    
+    // 预约成功提示
+    ElMessage({
+      type: 'success',
+      message: '预约成功！请按时参加课程。',
+      duration: 3000
+    })
+    
+    // 关闭弹窗
     reserveDialogVisible.value = false
+    
+    // 刷新课程安排数据
+    await fetchSchedules()
+    
+  } catch (error) {
+    // 错误处理
+    let errorMessage = '预约失败，请重试'
+    if (error.response?.data) {
+      if (typeof error.response.data === 'string' && error.response.data.includes('你已预约该课程')) {
+        errorMessage = '你已预约该课程，请勿重复预约'
+      } else if (typeof error.response.data === 'string') {
+        errorMessage = error.response.data
+      } else if (error.response.data.message) {
+        errorMessage = error.response.data.message
+      }
+    } else if (error.response?.status === 409) {
+      errorMessage = '该时间段已被预约，请选择其他时间'
+    } else if (error.response?.status === 400) {
+      errorMessage = '预约信息有误，请检查后重试'
+    }
+    
+    ElMessage({
+      type: 'error',
+      message: errorMessage,
+      duration: 4000
+    })
   } finally {
     dialogLoading.value = false
   }
@@ -133,7 +196,34 @@ const submitWaitlist = async () => {
     }, {
       headers: { Authorization: `Bearer ${token}` }
     })
+    
+    // 候补成功提示
+    ElMessage({
+      type: 'success',
+      message: '已加入候补名单！如有名额释放，我们将及时通知您。',
+      duration: 4000
+    })
+    
+    // 关闭弹窗
     waitlistDialogVisible.value = false
+    
+    // 刷新课程安排数据
+    await fetchSchedules()
+    
+  } catch (error) {
+    // 错误处理
+    let errorMessage = '加入候补失败，请重试'
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message
+    } else if (error.response?.status === 409) {
+      errorMessage = '您已在候补名单中，请勿重复添加'
+    }
+    
+    ElMessage({
+      type: 'error',
+      message: errorMessage,
+      duration: 4000
+    })
   } finally {
     dialogLoading.value = false
   }
@@ -213,5 +303,37 @@ onMounted(async () => {
 .instructor-bio {
   color: #888;
   font-size: 13px;
+}
+.reservation-details {
+  padding: 20px;
+}
+.reservation-item {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+.label {
+  font-weight: bold;
+  color: #333;
+  min-width: 80px;
+}
+.value {
+  margin-left: 10px;
+  color: #666;
+  flex: 1;
+}
+.reservation-notice {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f0f9ff;
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-start;
+  color: #1890ff;
+  font-size: 13px;
+}
+.reservation-notice .el-icon {
+  margin-right: 8px;
+  margin-top: 1px;
 }
 </style> 

@@ -15,6 +15,7 @@ import HomeView from '../views/HomeView.vue'
 import CoursesView from '../views/CoursesView.vue'
 import CourseDetailView from '../views/CourseDetailView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import MyGymReservationsView from '../views/MyGymReservationsView.vue'
 
 const routes = [
   {
@@ -96,6 +97,11 @@ const routes = [
     path: '/profile',
     name: 'profile',
     component: ProfileView
+  },
+  {
+    path: '/my-gym-reservations',
+    name: 'MyGymReservations',
+    component: MyGymReservationsView
   },
   {
     path: '/',

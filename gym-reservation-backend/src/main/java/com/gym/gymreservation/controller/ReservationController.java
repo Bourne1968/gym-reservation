@@ -56,13 +56,21 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getAllReservations());
     }
 
-    // 管理员强制取消预约
+    // 管理员或本人取消预约
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReservation(@PathVariable Long id) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         com.gym.gymreservation.model.User user = userRepository.findByUsername(username).orElse(null);
-        if (user == null || !"ADMIN".equals(user.getRole())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("只有管理员可以操作");
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
+        }
+        Reservation reservation = reservationService.getReservationById(id);
+        if (reservation == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("预约不存在");
+        }
+        // 只允许本人或管理员取消
+        if (!reservation.getUser().getId().equals(user.getId()) && !"ADMIN".equals(user.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("无权限取消该预约");
         }
         reservationService.deleteReservation(id);
         return ResponseEntity.ok("删除成功");

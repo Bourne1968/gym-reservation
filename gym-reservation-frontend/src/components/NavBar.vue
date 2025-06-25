@@ -5,8 +5,9 @@
       <template v-if="role !== 'ADMIN'">
         <el-button type="text" @click="goHome" :class="{active: isActive('/')}" >首页</el-button>
         <el-button type="text" @click="goCourses" :class="{active: isActive('/courses')}">课程列表</el-button>
-        <el-button type="text" @click="goGyms" :class="{active: isActive('/gyms')}">场地列表</el-button>
+        <el-button type="text" @click="goGyms" :class="{active: isActive('/gyms')}">场地预约</el-button>
         <el-button type="text" @click="goCourseBooking" :class="{active: isActive('/course-booking')}">课程预约</el-button>
+        <el-button type="text" @click="goMyReservations" :class="{active: isActive('/my-reservations')}">我的预约</el-button>
         <el-button type="text" @click="goProfile" :class="{active: isActive('/profile')}">个人中心</el-button>
       </template>
       <template v-else>
